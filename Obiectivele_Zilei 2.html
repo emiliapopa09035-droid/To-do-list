@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Obiectivele Zilei</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Cormorant Garamond (Serif elegant) & Plus Jakarta Sans (Sans-serif curat) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        cream: '#FAF7F2',
+                        sand: '#EFE8DF',
+                        blush: '#EBD9D3',
+                        roseDust: '#D8A7B1',
+                        terracotta: '#B57B6E',
+                        goldSoft: '#C5A880',
+                        espresso: '#3D322E',
+                        taupe: '#7A6B65',
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 30px -10px rgba(61, 50, 46, 0.06)',
+                        'card': '0 4px 20px -2px rgba(181, 123, 110, 0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #FAF7F2;
+            color: #3D322E;
+            -webkit-tap-highlight-color: transparent;
+            background-image: radial-gradient(circle at 100% 0%, rgba(235, 217, 211, 0.35) 0%, transparent 45%),
+                              radial-gradient(circle at 0% 100%, rgba(201, 168, 124, 0.18) 0%, transparent 45%);
+            min-height: 100vh;
+        }
+
+        /* Animație subtilă pentru bifare */
+        @keyframes checkPop {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .check-animate {
+            animation: checkPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Tranziții fine pentru elementele listei */
+        .habit-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .habit-card:active {
+            transform: scale(0.985);
+        }
+
+        /* Personalizare scrollbar discretă */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FAF7F2;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #EBD9D3;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-blush selection:text-espresso flex flex-col justify-between">
+
+    <!-- Ecran de Încărcare -->
+    <div id="loading-screen" class="fixed inset-0 z-50 bg-cream flex flex-col items-center justify-center p-6 transition-opacity duration-300">
+        <div class="w-10 h-10 border-2 border-roseDust border-t-terracotta rounded-full animate-spin mb-3"></div>
+        <p class="font-serif italic text-lg text-espresso">Se pregătește spațiul tău de liniște...</p>
+    </div>
+
+    <!-- Ecran Autentificare Simplă (Același Link, Spațiu Privat 1-la-1) -->
+    <section id="auth-screen" class="hidden w-full max-w-md mx-auto px-5 py-10 flex-grow flex flex-col justify-center">
+        <div class="bg-white/90 backdrop-blur-sm border border-blush rounded-3xl p-7 shadow-soft">
+            <div class="text-center mb-6">
+                <span class="inline-block px-3 py-1 rounded-full bg-sand text-[11px] uppercase tracking-widest text-terracotta font-semibold mb-2">
+                    Spațiu Privat 1-la-1
+                </span>
+                <h1 class="font-serif text-3xl font-semibold text-espresso">Obiectivele Zilei</h1>
+                <p class="text-xs text-taupe mt-1.5 leading-relaxed">
+                    Intră în spațiul tău personal. Doar tu și Emilia puteți vedea obiectivele, gândurile și încurajările tale.
+                </p>
+            </div>
+
+            <!-- Tab-uri: Participantă vs. Emilia (Admin) -->
+            <div class="grid grid-cols-2 gap-1.5 bg-sand/70 p-1 rounded-2xl mb-5">
+                <button type="button" id="tab-participant" class="py-2 px-3 rounded-xl text-xs font-semibold bg-white text-espresso shadow-xs transition-all">
+                    Sunt Participantă
+                </button>
+                <button type="button" id="tab-admin" class="py-2 px-3 rounded-xl text-xs font-medium text-taupe hover:text-espresso transition-all">
+                    Panou Emilia
+                </button>
+            </div>
+
+            <!-- Formular Participantă (Nume + Cod Personal) -->
+            <form id="participant-login-form" class="space-y-3.5">
+                <div>
+                    <label for="login-name" class="block text-xs font-medium text-espresso mb-1">Numele tău (ex: Maria I.)</label>
+                    <input type="text" id="login-name" required placeholder="Cum vrei să îți spună Emilia?"
+                           class="w-full bg-cream/70 border border-blush rounded-xl px-3.5 py-2.5 text-sm text-espresso placeholder-taupe/45 focus:outline-none focus:border-terracotta">
+                </div>
+                <div>
+                    <label for="login-pin" class="block text-xs font-medium text-espresso mb-1">Codul tău secret (4 cifre)</label>
+                    <input type="password" id="login-pin" inputmode="numeric" maxlength="6" required placeholder="Ex: 1234 (îl alegi tu prima dată)"
+                           class="w-full bg-cream/70 border border-blush rounded-xl px-3.5 py-2.5 text-sm text-espresso placeholder-taupe/45 focus:outline-none focus:border-terracotta">
+                    <p class="text-[11px] text-taupe/80 mt-1">Păstrează acest cod pentru a-ți accesa jurnalul și mesajele de pe orice telefon.</p>
+                </div>
+                <button type="submit" id="participant-submit-btn"
+                        class="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-terracotta to-[#A3695C] text-white font-medium text-sm shadow-md shadow-terracotta/20 hover:opacity-95 transition-all">
+                    Intră în spațiul meu ✨
+                </button>
+            </form>
+
+            <!-- Formular Admin (Emilia) -->
+            <form id="admin-login-form" class="hidden space-y-3.5">
+                <div>
+                    <label for="admin-pin-input" class="block text-xs font-medium text-espresso mb-1">Parola de Coordonatoare (Emilia)</label>
+                    <input type="password" id="admin-pin-input" required placeholder="Introdu parola ta secretă"
+                           class="w-full bg-cream/70 border border-blush rounded-xl px-3.5 py-2.5 text-sm text-espresso placeholder-taupe/45 focus:outline-none focus:border-terracotta">
+                    <p id="admin-setup-hint" class="text-[11px] text-terracotta mt-1">
+                        Prima dată când intri, parola pe care o introduci va deveni parola ta de administrator.
+                    </p>
+                </div>
+                <button type="submit" id="admin-submit-btn"
+                        class="w-full py-3.5 px-5 rounded-2xl bg-espresso text-cream font-medium text-sm shadow-md hover:bg-espresso/90 transition-all">
+                    Deschide Panoul Emilia 🌸
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- PANOU ADMIN EMILIA (Vede toate fetele individual și răspunde 1-la-1) -->
+    <section id="admin-dashboard" class="hidden w-full max-w-2xl mx-auto px-5 pt-6 pb-12 flex-grow">
+        <div class="flex items-center justify-between mb-5">
+            <div>
+                <span class="text-[11px] uppercase tracking-widest text-terracotta font-semibold">Panou Privat Coordonatoare</span>
+                <h1 class="font-serif text-3xl font-semibold text-espresso">Bună, Emilia 🌸</h1>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" id="copy-invite-link-admin" class="text-xs bg-white border border-blush text-espresso px-3 py-2 rounded-xl shadow-xs hover:bg-sand transition-colors">
+                    Copiază link grup
+                </button>
+                <button type="button" id="admin-logout-btn" class="text-xs bg-sand text-taupe hover:text-espresso px-3 py-2 rounded-xl transition-colors">
+                    Ieșire
+                </button>
+            </div>
+        </div>
+
+        <!-- Selector Dată pentru Vizualizare -->
+        <div class="bg-white/85 border border-blush rounded-2xl p-3.5 mb-5 flex items-center justify-between shadow-soft">
+            <span class="text-xs font-medium text-taupe">Ziua afișată:</span>
+            <input type="date" id="admin-date-picker" class="bg-sand/60 border border-blush rounded-xl px-3 py-1.5 text-xs font-medium text-espresso focus:outline-none">
+        </div>
+
+        <!-- Lista Participantelor -->
+        <div id="admin-participants-list" class="space-y-4">
+            <p class="text-center text-sm text-taupe py-8">Se încarcă rapoartele fetelor...</p>
+        </div>
+    </section>
+
+    <!-- Container Principal Participantă (Mobile-First) -->
+    <main id="participant-main" class="hidden w-full max-w-md mx-auto px-5 pt-7 pb-10 flex-grow">
+        
+        <!-- Bară superioară: Data + Buton Ieșire / Schimbă cont -->
+        <div class="flex justify-between items-center mb-3">
+            <span id="current-date" class="text-xs font-medium uppercase tracking-widest text-terracotta/90">
+                <!-- Data se populează automat -->
+            </span>
+            <button id="participant-logout-btn" type="button" class="text-xs text-taupe hover:text-espresso flex items-center gap-1 py-1 px-2.5 rounded-full bg-sand/80 transition-colors">
+                <span>Ieșire cont</span>
+            </button>
+        </div>
+
+        <!-- Antet Elegant -->
+        <header class="mb-5">
+            <h1 class="font-serif text-4xl font-semibold text-espresso tracking-tight leading-tight">
+                Obiectivele Zilei
+            </h1>
+            <p class="text-sm text-taupe mt-1">Bine ai venit, <strong id="display-user-name" class="text-espresso font-semibold">draga mea</strong>. Un pas mic pentru trup și suflet.</p>
+        </header>
+
+        <!-- Mesajele Private de la Emilia (Încurajări 1-la-1) -->
+        <section id="private-messages-section" class="mb-6 bg-gradient-to-br from-white to-sand/70 border border-goldSoft/50 rounded-2xl p-4 shadow-soft">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider text-terracotta flex items-center gap-1.5">
+                    💌 Încurajări private de la Emilia
+                </span>
+                <span class="text-[10px] text-taupe bg-white/80 px-2 py-0.5 rounded-full border border-blush">Doar tu le vezi</span>
+            </div>
+            <div id="participant-messages-list" class="space-y-2 max-h-44 overflow-y-auto pr-1">
+                <p class="text-xs text-taupe italic">Aici vor apărea mesajele personale de încurajare de la Emilia după ce îi trimiți ziua ta.</p>
+            </div>
+        </section>
+
+        <!-- Bară de Progres -->
+        <section class="mb-6 bg-white/70 rounded-2xl p-4 border border-sand shadow-soft">
+            <div class="flex justify-between items-end mb-2">
+                <div>
+                    <span class="text-xs font-medium text-taupe">Progresul tău de azi</span>
+                    <p id="progress-encouragement" class="text-xs text-terracotta font-medium mt-0.5">Începe cu blândețe!</p>
+                </div>
+                <div class="text-right">
+                    <span id="progress-count" class="font-serif text-2xl font-bold text-espresso">0</span>
+                    <span id="progress-total" class="text-xs text-taupe font-medium">/ 7</span>
+                </div>
+            </div>
+            <div class="w-full h-2.5 bg-sand rounded-full overflow-hidden">
+                <div id="progress-bar" class="h-full bg-gradient-to-r from-roseDust via-terracotta to-goldSoft rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+            </div>
+        </section>
+
+        <!-- Lista de Obiceiuri -->
+        <section aria-label="Lista de obiective zilnice" class="space-y-3" id="habits-container">
+            <!-- Elementele standard se randează din JS -->
+        </section>
+
+        <!-- Card Special: Obiectivul Meu Personal -->
+        <section class="mt-3">
+            <div id="personal-goal-card" class="habit-card bg-white/95 border border-goldSoft/40 rounded-2xl p-4 shadow-card transition-all">
+                <div class="flex items-start gap-3.5">
+                    <button type="button" id="personal-goal-checkbox" aria-label="Bifează obiectivul personal"
+                            class="mt-0.5 w-6 h-6 rounded-full border-2 border-goldSoft flex items-center justify-center shrink-0 transition-colors focus:outline-none">
+                        <svg id="personal-goal-check-icon" class="w-3.5 h-3.5 text-white hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </button>
+
+                    <div class="flex-grow">
+                        <label for="personal-goal-input" class="block text-xs font-semibold uppercase tracking-wider text-goldSoft mb-1">
+                            ✨ Obiectivul meu personal de astăzi:
+                        </label>
+                        <input type="text" id="personal-goal-input" 
+                               placeholder="Ex: Să citesc 15 pagini, să sun o prietenă..." 
+                               class="w-full bg-sand/40 rounded-xl px-3 py-2 text-sm text-espresso placeholder-taupe/45 focus:outline-none focus:bg-sand/70 transition-colors">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECȚIUNE NOUĂ FOARTE IMPORTANTĂ: Cum te-ai simțit astăzi? -->
+        <section class="mt-5 bg-white/95 border border-roseDust/70 rounded-2xl p-4 shadow-card">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-terracotta mb-1">
+                🤍 Cum te-ai simțit astăzi?
+            </label>
+            <p class="text-xs text-taupe mb-3">Alege o stare și scrie-i Emiliei câteva gânduri din inima ta:</p>
+
+            <!-- Selector rapid de stare -->
+            <div id="mood-pills" class="flex flex-wrap gap-1.5 mb-3">
+                <button type="button" data-mood="Recunoscătoare 🌸" class="mood-pill text-xs px-3 py-1.5 rounded-full border border-blush bg-cream text-espresso hover:border-terracotta transition-all">Recunoscătoare 🌸</button>
+                <button type="button" data-mood="Liniștită 🕊️" class="mood-pill text-xs px-3 py-1.5 rounded-full border border-blush bg-cream text-espresso hover:border-terracotta transition-all">Liniștită 🕊️</button>
+                <button type="button" data-mood="Plină de energie ✨" class="mood-pill text-xs px-3 py-1.5 rounded-full border border-blush bg-cream text-espresso hover:border-terracotta transition-all">Plină de energie ✨</button>
+                <button type="button" data-mood="Obosită 🍵" class="mood-pill text-xs px-3 py-1.5 rounded-full border border-blush bg-cream text-espresso hover:border-terracotta transition-all">Obosită 🍵</button>
+                <button type="button" data-mood="Am nevoie de încurajare 🤍" class="mood-pill text-xs px-3 py-1.5 rounded-full border border-blush bg-cream text-espresso hover:border-terracotta transition-all">Am nevoie de încurajare 🤍</button>
+            </div>
+
+            <!-- Jurnal / Gânduri pentru Emilia -->
+            <textarea id="feeling-notes" rows="3" 
+                      placeholder="Cum a fost ziua ta? Ce provocări sau bucurii ai avut astăzi?..."
+                      class="w-full bg-sand/40 rounded-xl p-3 text-sm text-espresso placeholder-taupe/45 focus:outline-none focus:bg-sand/70 transition-colors resize-none"></textarea>
+        </section>
+
+        <!-- Secțiune Acțiuni: Salvare Privată pentru Emilia + Trimitere Instagram -->
+        <section class="mt-7 space-y-3">
+            <!-- Buton Principal: Salvează & Trimite în spațiul privat către Emilia -->
+            <button id="save-and-notify-btn" type="button" 
+                    class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-terracotta to-[#A3695C] hover:from-[#A3695C] hover:to-[#915A4E] text-white font-medium text-base shadow-lg shadow-terracotta/25 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+                <span>Trimite ziua mea către Emilia 💌</span>
+            </button>
+
+            <!-- Buton Direct Instagram @masnita.emilia09 -->
+            <button id="send-instagram-btn" type="button" 
+                    class="w-full py-3.5 px-5 rounded-2xl bg-white hover:bg-sand/50 border border-roseDust text-espresso font-medium text-sm shadow-soft flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+                <svg class="w-4 h-4 text-terracotta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                <span>Trimite pe Instagram (@masnita.emilia09)</span>
+            </button>
+
+            <!-- Buton Secundar: Copiere Raport + Resetare Discretă -->
+            <div class="flex items-center gap-2.5">
+                <button id="copy-report-btn" type="button" 
+                        class="flex-grow py-3 px-4 rounded-2xl bg-white/85 hover:bg-white border border-blush text-espresso font-medium text-sm shadow-soft flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-terracotta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span>Copiază raportul</span>
+                </button>
+
+                <button id="reset-day-btn" type="button" title="Resetează bifele de astăzi"
+                        class="py-3 px-3.5 rounded-2xl bg-sand/70 hover:bg-sand text-taupe hover:text-espresso border border-transparent text-sm transition-colors flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- Citat Zilnic Motivațional -->
+        <footer class="mt-9 pt-6 border-t border-blush/50 text-center px-2">
+            <p id="daily-quote" class="font-serif italic text-lg text-espresso/85 leading-relaxed"></p>
+            <p id="daily-quote-author" class="text-[11px] uppercase tracking-widest text-taupe/70 mt-1.5"></p>
+        </footer>
+    </main>
+
+    <!-- Toast / Notificare Plutitoare -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 translate-y-3">
+        <div class="bg-espresso text-cream px-5 py-3 rounded-full shadow-xl text-sm font-medium flex items-center gap-2 whitespace-nowrap">
+            <span class="w-2 h-2 rounded-full bg-goldSoft"></span>
+            <span id="toast-message">Mesaj salvat!</span>
+        </div>
+    </div>
+
+    <!-- Modal Personalizat pentru Confirmare Resetare -->
+    <div id="reset-modal" class="fixed inset-0 z-50 bg-espresso/40 backdrop-blur-xs hidden items-center justify-center p-5">
+        <div class="bg-cream border border-blush rounded-3xl max-w-sm w-full p-6 shadow-2xl transform transition-all">
+            <h3 class="font-serif text-2xl font-semibold text-espresso">Resetezi ziua de azi?</h3>
+            <p class="text-sm text-taupe mt-2 leading-relaxed">
+                Toate obiectivele bifate astăzi, obiectivul personal și starea zilei vor fi resetate.
+            </p>
+            <div class="mt-6 flex gap-3">
+                <button id="cancel-reset-btn" type="button" class="flex-1 py-2.5 px-4 rounded-xl bg-sand text-espresso text-sm font-medium hover:bg-blush/50 transition-colors">
+                    Anulează
+                </button>
+                <button id="confirm-reset-btn" type="button" class="flex-1 py-2.5 px-4 rounded-xl bg-terracotta text-white text-sm font-medium hover:bg-[#A3695C] transition-colors">
+                    Da, resetează
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Firebase + Logică Privat 1-la-1 & Instagram Fallback -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 1. Inițializare Firebase (cu protecție dacă rulează local fără config)
+        let db = null;
+        let auth = null;
+        let firebaseReady = false;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'obiectivele-zilei-emilia';
+
+        async function initBackend() {
+            try {
+                if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                    const firebaseConfig = JSON.parse(__firebase_config);
+                    const app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    firebaseReady = true;
+                }
+            } catch (err) {
+                console.warn("Mod offline/local activat:", err);
+                firebaseReady = false;
+            }
+        }
+
+        // 2. Date & Constante Aplicație
+        const DEFAULT_HABITS = [
+            { id: 'god_time', text: 'Timp cu tine și Dumnezeu', icon: '🕊️' },
+            { id: 'no_sugar', text: 'Fără zahăr astăzi', icon: '🌿' },
+            { id: 'self_care', text: '10-15 minute pentru tine (o mască, rutina de skincare, etc.)', icon: '✨' },
+            { id: 'three_meals', text: '3 mese zilnice', icon: '🥗' },
+            { id: 'warm_water', text: 'Apă caldă dimineața (pentru cine poate)', icon: '☕' },
+            { id: 'two_liters', text: 'Minim 2 l de apă băută', icon: '💧' }
+        ];
+
+        const QUOTES = [
+            { text: "„Ai grijă de trupul tău, este singurul loc în care trebuie să trăiești.”", author: "Jim Rohn" },
+            { text: "„Liniștea sufletului începe atunci când alegi să fii blândă cu tine însăți.”", author: "Gând pentru azi" },
+            { text: "„Nu trebuie să faci totul perfect astăzi; este suficient să faci un pas cu iubire.”", author: "Gând pentru azi" },
+            { text: "„Când îți hrănești sufletul cu recunoștință și liniște, întreaga ta zi înflorește.”", author: "Gând pentru azi" },
+            { text: "„Disciplina blândă este cea mai frumoasă formă de respect față de tine.”", author: "Gând pentru azi" }
+        ];
+
+        const now = new Date();
+        const daysRo = ['Duminică', 'Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă'];
+        const monthsRo = ['Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie', 'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'];
+        const formattedDateRo = `${daysRo[now.getDay()]}, ${now.getDate()} ${monthsRo[now.getMonth()]} ${now.getFullYear()}`;
+        const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+        // Utilitar hash simplu pentru codul secret al fiecărei participante
+        function buildProfileId(name, pin) {
+            const clean = `${name.trim().toLowerCase()}_${pin.trim()}`;
+            let hash = 0;
+            for (let i = 0; i < clean.length; i++) {
+                hash = ((hash << 5) - hash) + clean.charCodeAt(i);
+                hash |= 0;
+            }
+            return `user_${Math.abs(hash)}_${name.trim().toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12)}`;
+        }
+
+        // Stare curentă
+        let currentSession = null; // { role: 'participant' | 'admin', profileId, name }
+        let dailyState = {
+            completedIds: [],
+            personalGoalText: '',
+            personalGoalDone: false,
+            mood: '',
+            feelingNotes: '',
+            submittedAt: null
+        };
+        let unsubscribeMessages = null;
+        let unsubscribeAdminUsers = null;
+        let unsubscribeAdminEntries = null;
+
+        // Toast Helper
+        let toastTimeout;
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = msg;
+            toast.classList.remove('opacity-0', 'translate-y-3');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-3');
+            }, 3000);
+        }
+
+        function copyToClipboard(text, successMsg) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                if (successMsg) showToast(successMsg);
+            } catch (err) {
+                console.error(err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // 3. Logica de Autentificare & Navigare Ecrane
+        const loadingScreen = document.getElementById('loading-screen');
+        const authScreen = document.getElementById('auth-screen');
+        const participantMain = document.getElementById('participant-main');
+        const adminDashboard = document.getElementById('admin-dashboard');
+
+        function showScreen(screenName) {
+            loadingScreen.classList.add('hidden');
+            authScreen.classList.add('hidden');
+            participantMain.classList.add('hidden');
+            adminDashboard.classList.add('hidden');
+
+            if (screenName === 'auth') authScreen.classList.remove('hidden');
+            if (screenName === 'participant') participantMain.classList.remove('hidden');
+            if (screenName === 'admin') adminDashboard.classList.remove('hidden');
+        }
+
+        // Tab switcher pe ecranul de login
+        const tabParticipant = document.getElementById('tab-participant');
+        const tabAdmin = document.getElementById('tab-admin');
+        const participantLoginForm = document.getElementById('participant-login-form');
+        const adminLoginForm = document.getElementById('admin-login-form');
+
+        tabParticipant.addEventListener('click', () => {
+            tabParticipant.className = 'py-2 px-3 rounded-xl text-xs font-semibold bg-white text-espresso shadow-xs transition-all';
+            tabAdmin.className = 'py-2 px-3 rounded-xl text-xs font-medium text-taupe hover:text-espresso transition-all';
+            participantLoginForm.classList.remove('hidden');
+            adminLoginForm.classList.add('hidden');
+        });
+
+        tabAdmin.addEventListener('click', () => {
+            tabAdmin.className = 'py-2 px-3 rounded-xl text-xs font-semibold bg-white text-espresso shadow-xs transition-all';
+            tabParticipant.className = 'py-2 px-3 rounded-xl text-xs font-medium text-taupe hover:text-espresso transition-all';
+            adminLoginForm.classList.remove('hidden');
+            participantLoginForm.classList.add('hidden');
+        });
+
+        // Submit Login Participantă
+        participantLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('login-name').value.trim();
+            const pin = document.getElementById('login-pin').value.trim();
+            if (!name || !pin) return;
+
+            const profileId = buildProfileId(name, pin);
+            currentSession = { role: 'participant', profileId, name };
+            sessionStorage.setItem('emilia_app_session', JSON.stringify(currentSession));
+
+            if (firebaseReady && auth.currentUser) {
+                try {
+                    const profileRef = doc(db, 'artifacts', appId, 'public', 'data', 'profiles', profileId);
+                    await setDoc(profileRef, {
+                        profileId,
+                        name,
+                        lastActiveDate: todayKey,
+                        updatedAt: Date.now()
+                    }, { merge: true });
+                } catch (err) {
+                    console.error("Eroare salvare profil:", err);
+                }
+            }
+
+            await loadParticipantWorkspace();
+        });
+
+        // Submit Login Admin (Emilia)
+        adminLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const enteredPin = document.getElementById('admin-pin-input').value.trim();
+            if (!enteredPin) return;
+
+            if (firebaseReady && auth.currentUser) {
+                try {
+                    const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'admin_config');
+                    const snap = await getDoc(configRef);
+                    if (!snap.exists()) {
+                        // Prima configurare a parolei Emiliei
+                        await setDoc(configRef, { adminPin: enteredPin, createdAt: Date.now() });
+                        showToast('Parola ta de administrator a fost setată! 🌸');
+                    } else if (snap.data().adminPin !== enteredPin) {
+                        showToast('Parolă incorectă. Încearcă din nou.');
+                        return;
+                    }
+                } catch (err) {
+                    console.error("Eroare verificare admin:", err);
+                }
+            }
+
+            currentSession = { role: 'admin', name: 'Emilia' };
+            sessionStorage.setItem('emilia_app_session', JSON.stringify(currentSession));
+            loadAdminWorkspace();
+        });
+
+        // Logout Handlers
+        document.getElementById('participant-logout-btn').addEventListener('click', () => {
+            if (unsubscribeMessages) unsubscribeMessages();
+            sessionStorage.removeItem('emilia_app_session');
+            currentSession = null;
+            showScreen('auth');
+        });
+
+        document.getElementById('admin-logout-btn').addEventListener('click', () => {
+            if (unsubscribeAdminUsers) unsubscribeAdminUsers();
+            if (unsubscribeAdminEntries) unsubscribeAdminEntries();
+            sessionStorage.removeItem('emilia_app_session');
+            currentSession = null;
+            showScreen('auth');
+        });
+
+        // 4. SPAȚIUL PARTICIPANTEI (Privat 1-la-1)
+        async function loadParticipantWorkspace() {
+            document.getElementById('current-date').textContent = formattedDateRo;
+            document.getElementById('display-user-name').textContent = currentSession.name;
+
+            // Resetăm starea locală înainte de încărcare
+            dailyState = {
+                completedIds: [],
+                personalGoalText: '',
+                personalGoalDone: false,
+                mood: '',
+                feelingNotes: '',
+                submittedAt: null
+            };
+
+            // Încărcăm datele zilei curente din Firestore (sau fallback local)
+            if (firebaseReady && auth.currentUser) {
+                try {
+                    const entryId = `${currentSession.profileId}_${todayKey}`;
+                    const entryRef = doc(db, 'artifacts', appId, 'public', 'data', 'daily_entries', entryId);
+                    const snap = await getDoc(entryRef);
+                    if (snap.exists()) {
+                        dailyState = { ...dailyState, ...snap.data() };
+                    }
+                } catch (err) {
+                    console.error("Eroare încărcare zi:", err);
+                }
+
+                // Ascultăm în timp real mesajele private dintre Emilia și această participantă
+                if (unsubscribeMessages) unsubscribeMessages();
+                const msgsCol = collection(db, 'artifacts', appId, 'public', 'data', 'private_messages');
+                unsubscribeMessages = onSnapshot(msgsCol, (snapshot) => {
+                    const myMsgs = [];
+                    snapshot.forEach(docSnap => {
+                        const data = docSnap.data();
+                        if (data.profileId === currentSession.profileId) {
+                            myMsgs.push(data);
+                        }
+                    });
+                    myMsgs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                    renderParticipantMessages(myMsgs);
+                }, (err) => console.error("Eroare mesaje:", err));
+            }
+
+            document.getElementById('personal-goal-input').value = dailyState.personalGoalText || '';
+            document.getElementById('feeling-notes').value = dailyState.feelingNotes || '';
+            renderHabits();
+            updatePersonalGoalUI();
+            updateMoodPillsUI();
+            updateProgressUI();
+            showScreen('participant');
+        }
+
+        function renderParticipantMessages(messages) {
+            const container = document.getElementById('participant-messages-list');
+            if (!messages.length) {
+                container.innerHTML = `<p class="text-xs text-taupe italic">Aici vor apărea mesajele personale de încurajare de la Emilia după ce îi trimiți ziua ta.</p>`;
+                return;
+            }
+            container.innerHTML = messages.map(m => `
+                <div class="bg-white/95 border border-blush/80 rounded-xl p-3 shadow-2xs">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[11px] font-semibold text-terracotta">Emilia 🤍</span>
+                        <span class="text-[10px] text-taupe">${m.dateLabel || ''}</span>
+                    </div>
+                    <p class="text-xs text-espresso leading-relaxed">${escapeHtml(m.text)}</p>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        // Randare Lista Obiceiuri
+        function renderHabits() {
+            const habitsContainer = document.getElementById('habits-container');
+            habitsContainer.innerHTML = '';
+            DEFAULT_HABITS.forEach(habit => {
+                const isChecked = dailyState.completedIds.includes(habit.id);
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = `habit-card w-full text-left rounded-2xl p-4 border flex items-center gap-3.5 shadow-card focus:outline-none ${
+                    isChecked ? 'bg-sand/85 border-roseDust/80' : 'bg-white/95 border-blush/60 hover:border-roseDust'
+                }`;
+                card.innerHTML = `
+                    <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                        isChecked ? 'bg-terracotta border-terracotta check-animate' : 'border-roseDust bg-white'
+                    }">
+                        <svg class="w-3.5 h-3.5 text-white ${isChecked ? 'block' : 'hidden'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <span class="text-base shrink-0 select-none">${habit.icon}</span>
+                    <span class="text-sm font-medium leading-snug transition-colors ${
+                        isChecked ? 'text-taupe line-through decoration-roseDust' : 'text-espresso'
+                    }">${habit.text}</span>
+                `;
+                card.addEventListener('click', () => {
+                    if (dailyState.completedIds.includes(habit.id)) {
+                        dailyState.completedIds = dailyState.completedIds.filter(id => id !== habit.id);
+                    } else {
+                        dailyState.completedIds.push(habit.id);
+                    }
+                    syncDailyStateToCloud();
+                    renderHabits();
+                    updateProgressUI();
+                });
+                habitsContainer.appendChild(card);
+            });
+        }
+
+        // Obiectiv Personal
+        const personalGoalInput = document.getElementById('personal-goal-input');
+        const personalGoalCheckbox = document.getElementById('personal-goal-checkbox');
+        const personalGoalCheckIcon = document.getElementById('personal-goal-check-icon');
+        const personalGoalCard = document.getElementById('personal-goal-card');
+
+        function updatePersonalGoalUI() {
+            if (dailyState.personalGoalDone) {
+                personalGoalCheckbox.classList.add('bg-goldSoft', 'border-goldSoft', 'check-animate');
+                personalGoalCheckbox.classList.remove('bg-white');
+                personalGoalCheckIcon.classList.remove('hidden');
+                personalGoalCard.classList.add('bg-sand/85');
+                personalGoalInput.classList.add('line-through', 'text-taupe');
+            } else {
+                personalGoalCheckbox.classList.remove('bg-goldSoft', 'border-goldSoft', 'check-animate');
+                personalGoalCheckbox.classList.add('bg-white');
+                personalGoalCheckIcon.classList.add('hidden');
+                personalGoalCard.classList.remove('bg-sand/85');
+                personalGoalInput.classList.remove('line-through', 'text-taupe');
+            }
+        }
+
+        personalGoalInput.addEventListener('input', (e) => {
+            dailyState.personalGoalText = e.target.value;
+            syncDailyStateToCloud();
+        });
+
+        personalGoalCheckbox.addEventListener('click', () => {
+            if (!dailyState.personalGoalText.trim() && !dailyState.personalGoalDone) {
+                showToast('Scrie mai întâi obiectivul tău personal ✨');
+                personalGoalInput.focus();
+                return;
+            }
+            dailyState.personalGoalDone = !dailyState.personalGoalDone;
+            updatePersonalGoalUI();
+            updateProgressUI();
+            syncDailyStateToCloud();
+        });
+
+        // Cum te-ai simțit astăzi (Mood Pills + Textarea)
+        function updateMoodPillsUI() {
+            document.querySelectorAll('.mood-pill').forEach(btn => {
+                if (btn.dataset.mood === dailyState.mood) {
+                    btn.className = 'mood-pill text-xs px-3 py-1.5 rounded-full border border-terracotta bg-terracotta text-white font-medium shadow-xs transition-all';
+                } else {
+                    btn.className = 'mood-pill text-xs px-3 py-1.5 rounded-full border border-blush bg-cream text-espresso hover:border-terracotta transition-all';
+                }
+            });
+        }
+
+        document.querySelectorAll('.mood-pill').forEach(btn => {
+            btn.addEventListener('click', () => {
+                dailyState.mood = dailyState.mood === btn.dataset.mood ? '' : btn.dataset.mood;
+                updateMoodPillsUI();
+                syncDailyStateToCloud();
+            });
+        });
+
+        const feelingNotesInput = document.getElementById('feeling-notes');
+        feelingNotesInput.addEventListener('input', (e) => {
+            dailyState.feelingNotes = e.target.value;
+            syncDailyStateToCloud();
+        });
+
+        // Progres Bar
+        function updateProgressUI() {
+            const totalTasks = DEFAULT_HABITS.length + 1;
+            const completedCount = dailyState.completedIds.length + (dailyState.personalGoalDone ? 1 : 0);
+            const percentage = Math.round((completedCount / totalTasks) * 100);
+
+            document.getElementById('progress-count').textContent = completedCount;
+            document.getElementById('progress-total').textContent = `/ ${totalTasks}`;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+
+            const encouragementEl = document.getElementById('progress-encouragement');
+            if (completedCount === 0) encouragementEl.textContent = 'Începe cu blândețe!';
+            else if (completedCount <= 2) encouragementEl.textContent = 'Un început minunat, continuă tot așa!';
+            else if (completedCount <= 5) encouragementEl.textContent = 'Ești pe drumul cel bun, felicitări!';
+            else if (completedCount === 6) encouragementEl.textContent = 'Aproape gata! Mai ai un singur pas.';
+            else encouragementEl.textContent = 'Felicitări! Ai împlinit toate obiectivele zilei 🌸';
+        }
+
+        // Sincronizare silențioasă către Firestore
+        let saveDebounce;
+        function syncDailyStateToCloud(isExplicitSubmit = false) {
+            clearTimeout(saveDebounce);
+            saveDebounce = setTimeout(async () => {
+                if (!firebaseReady || !auth.currentUser || !currentSession) return;
+                try {
+                    const entryId = `${currentSession.profileId}_${todayKey}`;
+                    const entryRef = doc(db, 'artifacts', appId, 'public', 'data', 'daily_entries', entryId);
+                    await setDoc(entryRef, {
+                        profileId: currentSession.profileId,
+                        userName: currentSession.name,
+                        dateKey: todayKey,
+                        dateLabel: formattedDateRo,
+                        completedIds: dailyState.completedIds,
+                        personalGoalText: dailyState.personalGoalText,
+                        personalGoalDone: dailyState.personalGoalDone,
+                        mood: dailyState.mood,
+                        feelingNotes: dailyState.feelingNotes,
+                        submittedAt: isExplicitSubmit ? Date.now() : (dailyState.submittedAt || Date.now())
+                    }, { merge: true });
+                } catch (err) {
+                    console.error("Eroare sincronizare:", err);
+                }
+            }, isExplicitSubmit ? 0 : 400);
+        }
+
+        // Buton Principal: Trimite ziua mea către Emilia în spațiul privat
+        document.getElementById('save-and-notify-btn').addEventListener('click', () => {
+            dailyState.submittedAt = Date.now();
+            syncDailyStateToCloud(true);
+            showToast('Ziua ta a fost trimisă în privat către Emilia 💌');
+        });
+
+        // Construire Raport Text (pentru Instagram / Copiere)
+        function buildReportMessage() {
+            const name = currentSession?.name || 'Participanta';
+            const totalTasks = DEFAULT_HABITS.length + 1;
+            const completedCount = dailyState.completedIds.length + (dailyState.personalGoalDone ? 1 : 0);
+
+            let lines = [];
+            lines.push(`🌸 Obiectivele Zilei — ${name}`);
+            lines.push(`📅 ${formattedDateRo}`);
+            lines.push(`✨ Progres: ${completedCount}/${totalTasks}`);
+            lines.push('');
+
+            DEFAULT_HABITS.forEach(habit => {
+                const done = dailyState.completedIds.includes(habit.id);
+                lines.push(`${done ? '✅' : '⬜'} ${habit.text}`);
+            });
+
+            const personalText = dailyState.personalGoalText.trim();
+            lines.push(`${dailyState.personalGoalDone ? '✅' : '⬜'} Obiectiv personal: ${personalText || '(nespecificat)'}`);
+
+            if (dailyState.mood || dailyState.feelingNotes.trim()) {
+                lines.push('');
+                lines.push(`🤍 Cum m-am simțit astăzi: ${dailyState.mood || ''}`);
+                if (dailyState.feelingNotes.trim()) {
+                    lines.push(`„${dailyState.feelingNotes.trim()}”`);
+                }
+            }
+
+            return lines.join('\n');
+        }
+
+        // Buton Instagram @masnita.emilia09
+        document.getElementById('send-instagram-btn').addEventListener('click', () => {
+            const report = buildReportMessage();
+            copyToClipboard(report, 'Raport copiat! Se deschide Instagram @masnita.emilia09 — lipește mesajul acolo 🌸');
+            setTimeout(() => {
+                window.open('https://ig.me/m/masnita.emilia09', '_blank');
+            }, 600);
+        });
+
+        // Buton Copiază Raportul
+        document.getElementById('copy-report-btn').addEventListener('click', () => {
+            copyToClipboard(buildReportMessage(), 'Raportul a fost copiat! 🌸');
+        });
+
+        // Resetare Zi
+        const resetModal = document.getElementById('reset-modal');
+        document.getElementById('reset-day-btn').addEventListener('click', () => {
+            resetModal.classList.remove('hidden');
+            resetModal.classList.add('flex');
+        });
+        document.getElementById('cancel-reset-btn').addEventListener('click', () => {
+            resetModal.classList.add('hidden');
+            resetModal.classList.remove('flex');
+        });
+        document.getElementById('confirm-reset-btn').addEventListener('click', () => {
+            dailyState = {
+                completedIds: [],
+                personalGoalText: '',
+                personalGoalDone: false,
+                mood: '',
+                feelingNotes: '',
+                submittedAt: null
+            };
+            personalGoalInput.value = '';
+            feelingNotesInput.value = '';
+            syncDailyStateToCloud(true);
+            renderHabits();
+            updatePersonalGoalUI();
+            updateMoodPillsUI();
+            updateProgressUI();
+            resetModal.classList.add('hidden');
+            resetModal.classList.remove('flex');
+            showToast('Ziua a fost resetată');
+        });
+
+        // 5. PANOU ADMIN EMILIA (Vede toate fetele individual & răspunde privat 1-la-1)
+        let selectedAdminDate = todayKey;
+        let allProfilesMap = {};
+        let allEntriesList = [];
+
+        function loadAdminWorkspace() {
+            const datePicker = document.getElementById('admin-date-picker');
+            datePicker.value = selectedAdminDate;
+
+            datePicker.onchange = (e) => {
+                selectedAdminDate = e.target.value || todayKey;
+                renderAdminParticipants();
+            };
+
+            document.getElementById('copy-invite-link-admin').onclick = () => {
+                const cleanUrl = window.location.href.split('?')[0];
+                copyToClipboard(cleanUrl, 'Link-ul aplicației a fost copiat! Trimite-l fetelor 🌸');
+            };
+
+            if (firebaseReady && auth.currentUser) {
+                if (unsubscribeAdminUsers) unsubscribeAdminUsers();
+                if (unsubscribeAdminEntries) unsubscribeAdminEntries();
+
+                const profilesCol = collection(db, 'artifacts', appId, 'public', 'data', 'profiles');
+                unsubscribeAdminUsers = onSnapshot(profilesCol, (snap) => {
+                    allProfilesMap = {};
+                    snap.forEach(d => {
+                        allProfilesMap[d.id] = d.data();
+                    });
+                    renderAdminParticipants();
+                }, (err) => console.error(err));
+
+                const entriesCol = collection(db, 'artifacts', appId, 'public', 'data', 'daily_entries');
+                unsubscribeAdminEntries = onSnapshot(entriesCol, (snap) => {
+                    allEntriesList = [];
+                    snap.forEach(d => {
+                        allEntriesList.push(d.data());
+                    });
+                    renderAdminParticipants();
+                }, (err) => console.error(err));
+            }
+
+            showScreen('admin');
+        }
+
+        function renderAdminParticipants() {
+            const container = document.getElementById('admin-participants-list');
+            const profileIds = Object.keys(allProfilesMap);
+
+            if (!profileIds.length) {
+                container.innerHTML = `
+                    <div class="bg-white/80 border border-blush rounded-2xl p-6 text-center">
+                        <p class="text-sm text-taupe">Încă nu s-a conectat nicio participantă. Trimite-le link-ul și vor apărea aici pe măsură ce își completează ziua 🌸</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = profileIds.map(pid => {
+                const profile = allProfilesMap[pid];
+                const entry = allEntriesList.find(e => e.profileId === pid && e.dateKey === selectedAdminDate);
+                const completedCount = entry ? (entry.completedIds?.length || 0) + (entry.personalGoalDone ? 1 : 0) : 0;
+                const totalTasks = DEFAULT_HABITS.length + 1;
+
+                const habitsHtml = entry ? DEFAULT_HABITS.map(h => {
+                    const done = (entry.completedIds || []).includes(h.id);
+                    return `<li class="text-xs flex items-center gap-2 ${done ? 'text-espresso' : 'text-taupe/60'}">
+                        <span>${done ? '✅' : '⬜'}</span>
+                        <span>${h.text}</span>
+                    </li>`;
+                }).join('') : '';
+
+                return `
+                <article class="bg-white/95 border border-blush rounded-3xl p-5 shadow-card">
+                    <div class="flex items-center justify-between border-b border-sand pb-3 mb-3">
+                        <div>
+                            <h3 class="font-serif text-2xl font-semibold text-espresso">${escapeHtml(profile.name)}</h3>
+                            <span class="text-[11px] text-taupe">${entry ? `Progres: ${completedCount}/${totalTasks}` : 'Nu a completat încă în această zi'}</span>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold ${entry ? 'bg-sand text-terracotta' : 'bg-cream text-taupe'}">
+                            ${entry ? `${Math.round((completedCount / totalTasks) * 100)}%` : 'Inactivă'}
+                        </span>
+                    </div>
+
+                    ${entry ? `
+                        <!-- Stare și Jurnal -->
+                        <div class="bg-cream/90 border border-roseDust/50 rounded-2xl p-3.5 mb-3">
+                            <span class="block text-[11px] font-semibold uppercase tracking-wider text-terracotta mb-1">
+                                🤍 Cum s-a simțit astăzi: ${escapeHtml(entry.mood || 'Nespecificat')}
+                            </span>
+                            <p class="text-xs text-espresso leading-relaxed italic">
+                                ${entry.feelingNotes ? `„${escapeHtml(entry.feelingNotes)}”` : 'Nu a scris notițe suplimentare.'}
+                            </p>
+                        </div>
+
+                        <!-- Obiectiv Personal -->
+                        <div class="mb-3 text-xs bg-sand/50 rounded-xl px-3 py-2 text-espresso">
+                            <strong>✨ Obiectiv personal:</strong> ${escapeHtml(entry.personalGoalText || 'Nespecificat')} 
+                            ${entry.personalGoalDone ? '✅' : ''}
+                        </div>
+
+                        <!-- Lista Obiceiuri -->
+                        <ul class="space-y-1.5 mb-4 pl-1">
+                            ${habitsHtml}
+                        </ul>
+                    ` : ''}
+
+                    <!-- Formular Trimitere Încurajare Privată 1-la-1 -->
+                    <div class="pt-3 border-t border-sand">
+                        <label class="block text-[11px] font-semibold text-espresso mb-1.5">
+                            💌 Trimite-i o încurajare privată (o vede doar ${escapeHtml(profile.name)}):
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="text" id="reply-input-${pid}" placeholder="Scrie un gând cald pentru ea..."
+                                   class="flex-grow bg-cream border border-blush rounded-xl px-3 py-2 text-xs text-espresso placeholder-taupe/45 focus:outline-none focus:border-terracotta">
+                            <button type="button" data-pid="${pid}" data-pname="${escapeHtml(profile.name)}"
+                                    class="send-reply-btn px-4 py-2 rounded-xl bg-terracotta text-white text-xs font-medium hover:bg-[#A3695C] transition-colors shrink-0">
+                                Trimite
+                            </button>
+                        </div>
+                    </div>
+                </article>`;
+            }).join('');
+
+            // Atașăm evenimentele pentru butoanele de răspuns 1-la-1
+            document.querySelectorAll('.send-reply-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const pid = btn.dataset.pid;
+                    const pname = btn.dataset.pname;
+                    const inputEl = document.getElementById(`reply-input-${pid}`);
+                    const text = inputEl.value.trim();
+                    if (!text) return;
+
+                    if (firebaseReady && auth.currentUser) {
+                        try {
+                            const msgsCol = collection(db, 'artifacts', appId, 'public', 'data', 'private_messages');
+                            await addDoc(msgsCol, {
+                                profileId: pid,
+                                participantName: pname,
+                                text,
+                                dateLabel: formattedDateRo,
+                                createdAt: Date.now()
+                            });
+                            inputEl.value = '';
+                            showToast(`Încurajare trimisă în privat către ${pname} 💌`);
+                        } catch (err) {
+                            console.error("Eroare trimitere mesaj:", err);
+                            showToast('Eroare la trimitere.');
+                        }
+                    }
+                });
+            });
+        }
+
+        // Citatul Zilei
+        const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+        const todayQuote = QUOTES[dayOfYear % QUOTES.length];
+        document.getElementById('daily-quote').textContent = todayQuote.text;
+        document.getElementById('daily-quote-author').textContent = `— ${todayQuote.author}`;
+
+        // Pornire Aplicație
+        (async function bootstrap() {
+            await initBackend();
+            const savedSession = sessionStorage.getItem('emilia_app_session');
+            if (savedSession) {
+                try {
+                    currentSession = JSON.parse(savedSession);
+                    if (currentSession.role === 'admin') {
+                        loadAdminWorkspace();
+                        return;
+                    } else if (currentSession.role === 'participant') {
+                        await loadParticipantWorkspace();
+                        return;
+                    }
+                } catch (e) {
+                    sessionStorage.removeItem('emilia_app_session');
+                }
+            }
+            showScreen('auth');
+        })();
+    </script>
+</body>
+</html>
